@@ -1,7 +1,11 @@
-package enumeration;
+package com.example.springsecurity.enumeration;
 
 public enum Role {
     USER,
     ADMIN,
-    MANAGER
+    MANAGER;
+
+    public String getAuthority() {
+        return "ROLE_" + this.name();
+    }
 }
