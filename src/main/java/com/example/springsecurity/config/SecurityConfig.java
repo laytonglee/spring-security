@@ -4,6 +4,7 @@ package com.example.springsecurity.config;
 import com.example.springsecurity.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,6 +18,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -31,21 +37,32 @@ public class SecurityConfig  {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(AbstractHttpConfigurer::disable);
+        http.cors(Customizer.withDefaults());
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
-//        http.httpBasic(AbstractHttpConfigurer::disable);
+        http.httpBasic(AbstractHttpConfigurer::disable);
 
 //        http.formLogin(Customizer.withDefaults());
-        http.httpBasic(Customizer.withDefaults());
+//        http.httpBasic(Customizer.withDefaults());
 
-        http.authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .requestMatchers("/api/public/**").permitAll() // ALLOW ALL
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN") // ROLE_ADMIN REQUIRED AUTH
-//                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN") // ROLE_ADMIN REQUIRED AUTH
-                                .anyRequest().authenticated() // ANY REQUESTS REQUIRED AUTHENTICATION
+//        http.authorizeHttpRequests(authorizeRequests ->
+//                        authorizeRequests
+//                                .requestMatchers("/api/public/**").permitAll() // ALLOW ALL
+//                                .requestMatchers("/api/admin/**").hasRole("ADMIN") // ROLE_ADMIN REQUIRED AUTH
+////                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN") // ROLE_ADMIN REQUIRED
+//                                .requestMatchers("/api/auth/**").permitAll()
+//                                .anyRequest().authenticated() // ANY REQUESTS REQUIRED AUTHENTICATION
+//        );
+
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
         );
+
         // STATELESS
         http.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         // BUILD NEW SECURITY FILTER CHAIN
@@ -69,6 +86,20 @@ public class SecurityConfig  {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration auth) throws Exception{
         return auth.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource () {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        config.setAllowCredentials(true);
+        config.addAllowedHeader("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+
+        return source;
     }
 
 
