@@ -43,7 +43,7 @@ public class SecurityConfig  {
         http.httpBasic(AbstractHttpConfigurer::disable);
 
 //        http.formLogin(Customizer.withDefaults());
-//        http.httpBasic(Customizer.withDefaults());
+        http.httpBasic(Customizer.withDefaults());
 
 //        http.authorizeHttpRequests(authorizeRequests ->
 //                        authorizeRequests
